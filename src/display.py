@@ -31,9 +31,9 @@ class Display:
         self.outline_thickness = outline_thickness
         self.outline_color = outline_color
 
-        self.update_surface()
+        self._update_surface()
 
-    def update_surface(self) -> None:
+    def _update_surface(self) -> None:
         surface = pygame.Surface(self.disp_size)
         surface.fill(self.disp_color)
         if self.outline_thickness > 0:
@@ -58,6 +58,7 @@ class Display:
         self.surface = surface
 
     def draw(self, screen: pygame.Surface) -> None:
+        self._update_surface()
         screen.blit(self.surface, self.pos)
 
 

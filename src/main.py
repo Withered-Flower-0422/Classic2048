@@ -10,7 +10,7 @@ from base_path import base_path
 from classic2048 import Classic2048
 from tile_drawer import draw_tile_using_config
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 AUTHOR = "Withered_Flower"
 
 
@@ -33,6 +33,10 @@ class App:
         self.game_over_sound = pygame.mixer.Sound(
             base_path / "sounds" / "game_over.wav"
         )
+        self.slide_sound.set_volume(0.5)
+        self.game_over_sound.set_volume(0.5)
+        self.hover_sound = pygame.mixer.Sound(base_path / "sounds" / "hover.ogg")
+        self.click_sound = pygame.mixer.Sound(base_path / "sounds" / "click.ogg")
 
         # game variables
         self.row: int = 4
@@ -131,7 +135,10 @@ class App:
                 font_color="blue",
                 offset_y=(-6, -1),
                 disp_size=(45, 45),
-                on_click=lambda: self.change_row_col("col", 1),
+                on_enter_sound=self.hover_sound,
+                on_click=self.change_row_col,
+                on_click_params=(("col", 1), {}),
+                on_click_sound=self.click_sound,
             ),
             "col_down": Button(
                 content="-",
@@ -143,7 +150,10 @@ class App:
                 font_color="orange",
                 offset_y=(-6, 1),
                 disp_size=(45, 45),
-                on_click=lambda: self.change_row_col("col", -1),
+                on_enter_sound=self.hover_sound,
+                on_click=self.change_row_col,
+                on_click_params=(("col", -1), {}),
+                on_click_sound=self.click_sound,
             ),
             "row_up": Button(
                 content="+",
@@ -155,7 +165,10 @@ class App:
                 font_color="white",
                 offset_y=(-6, -1),
                 disp_size=(45, 45),
-                on_click=lambda: self.change_row_col("row", 1),
+                on_enter_sound=self.hover_sound,
+                on_click=self.change_row_col,
+                on_click_params=(("row", 1), {}),
+                on_click_sound=self.click_sound,
             ),
             "row_down": Button(
                 content="-",
@@ -167,7 +180,10 @@ class App:
                 font_color="black",
                 offset_y=(-6, 1),
                 disp_size=(45, 45),
-                on_click=lambda: self.change_row_col("row", -1),
+                on_enter_sound=self.hover_sound,
+                on_click=self.change_row_col,
+                on_click_params=(("row", -1), {}),
+                on_click_sound=self.click_sound,
             ),
             "start": Button(
                 content="Start",
@@ -180,7 +196,9 @@ class App:
                 offset_y=(-6, 6),
                 disp_size=(200, 100),
                 disp_color=config.BG_COLOR,
+                on_enter_sound=self.hover_sound,
                 on_click=self.start_game,
+                on_click_sound=self.click_sound,
             ),
         }
 
@@ -225,9 +243,7 @@ class App:
                     pygame.quit()
                     sys.exit()
                 for btn in self.btns.values():
-                    if btn.handle_event(event):
-                        for disp in self.disps.values():
-                            disp.update_surface()
+                    btn.handle_events(event)
 
             self.update_display()
 
@@ -251,11 +267,6 @@ class App:
                                     self.slide_sound.play()
                             break
                     if event.key == pygame.K_r:
-                        # reset start button color manually.
-                        # This counts as a bug, but I won't fix it.
-                        self.btns["start"].disp_color = self.btns[
-                            "start"
-                        ].disp_color_original
                         self.is_gaming = False
                     self.update_display()
 
