@@ -1,5 +1,5 @@
 import pygame
-from typing import Callable
+from typing import Callable, Any
 from pygame.typing import ColorLike
 
 from display import Display
@@ -45,7 +45,7 @@ class Button(Display):
 
         self.update_surface()
 
-    def handle_event(self, event: pygame.event.Event) -> bool:
+    def handle_event(self, event: pygame.event.Event) -> Any | None:
         """
         Return the value returned by the on_click function if the button is clicked, None otherwise.
         """
