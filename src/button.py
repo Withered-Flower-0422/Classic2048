@@ -11,7 +11,7 @@ class Button(Display):
     def __init__(
         self,
         # basic settings
-        content: str = "Button",
+        content: str | pygame.Surface = "Button",
         pos: tuple[int, int] = (150, 50),
         # font settings
         font_size: tuple[int, int] = (60, 100),  # [normal, backup]
@@ -69,11 +69,11 @@ class Button(Display):
         self.is_hovered: bool = False
         self.is_clicked: bool = False
 
-    def handle_events(self, event: pygame.event.Event) -> list[Any]:
+    def handle_events(self, event: pygame.event.Event) -> tuple[Any, Any, Any]:
         """
-        Returns a list containing the return values of `on_enter`, `on_click`, and `on_exit` functions
-        if they are called, defaults to `None` if no function is called.
-        The order of the return values is [`on_enter`, `on_click`, `on_exit`].
+        Returns a tuple containing the return values (default is None) of
+        `on_enter`, `on_click`, and `on_exit` functions if they are called.
+        The order of the return values is (`on_enter`, `on_click`, `on_exit`).
         """
 
         # helper functions
@@ -128,12 +128,19 @@ class Button(Display):
 
             return ret
 
-        abs_rect = self.surface.get_rect().move(self.pos)
+        abs_rect = self.surface.get_rect().move(
+            (
+                self.pos[0] - self.disp_size[0] / 2,
+                self.pos[1] - self.disp_size[1] / 2,
+            )
+        )
 
-        return [handle_on_enter(), handle_on_click(), handle_on_exit()]
+        return handle_on_enter(), handle_on_click(), handle_on_exit()
 
 
 if __name__ == "__main__":
+    from random import randint
+
     import config
     from base_path import base_path
 
@@ -145,66 +152,71 @@ if __name__ == "__main__":
     click_sound = pygame.mixer.Sound(base_path / "sounds" / "click.ogg")
     exit_sound = pygame.mixer.Sound(base_path / "sounds" / "hover.ogg")
 
-    def b1_on_enter(a):
+    def b1_on_enter(param):
         print("b1 entered")
-        return a
+        return param
 
-    def b1_on_click(a):
+    def b1_on_click(param):
         print("b1 clicked")
-        return a
+        return param
 
-    def b1_on_exit(a):
+    def b1_on_exit(param):
         print("b1 exited")
-        return a
+        return param
 
-    def b2_on_enter(a):
+    def b2_on_enter(param):
         print("b2 entered")
-        return a
+        return param
 
-    def b2_on_click(a):
+    def b2_on_click(param):
         print("b2 clicked")
-        return a
+        btn2.pos = (randint(100, 1800), randint(100, 900))
+        return param
 
-    def b2_on_exit(a):
+    def b2_on_exit(param):
         print("b2 exited")
-        return a
+        return param
 
     btn1 = Button(
         on_enter=b1_on_enter,
-        on_enter_params=((1,), {}),
+        on_enter_params=(("b1_enter_param",), {}),
         on_enter_sound=enter_sound,
         on_click=b1_on_click,
-        on_click_params=((2,), {}),
+        on_click_params=(("b1_click_param",), {}),
         on_click_sound=click_sound,
         on_exit=b1_on_exit,
-        on_exit_params=((3,), {}),
+        on_exit_params=(("b1_exit_param",), {}),
         on_exit_sound=exit_sound,
     )
     btn2 = Button(
-        content="Button 2",
+        content="Jump!!!",
         pos=(250, 100),
         # events settings
         on_enter=b2_on_enter,
-        on_enter_params=((4,), {}),
+        on_enter_params=(("b2_enter_param",), {}),
         on_enter_sound=enter_sound,
         on_click=b2_on_click,
-        on_click_params=((5,), {}),
+        on_click_params=(("b2_click_param",), {}),
         on_click_sound=click_sound,
         on_exit=b2_on_exit,
-        on_exit_params=((6,), {}),
+        on_exit_params=(("b2_exit_param",), {}),
         on_exit_sound=exit_sound,
     )
 
     while True:
+        screen.fill(config.BG_COLOR)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
             v11, v12, v13 = btn1.handle_events(event)
-            btn1.draw(screen)
             v21, v22, v23 = btn2.handle_events(event)
-            btn2.draw(screen)
             for v in [v11, v12, v13, v21, v22, v23]:
                 if v is not None:
                     print(v)
+
+        btn1.draw(screen)
+        btn2.draw(screen)
+
         pygame.display.update()
