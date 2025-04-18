@@ -123,7 +123,7 @@ class App:
             ),
         }
 
-        # create btns
+        # create buttons
         self.btns: dict[str, Button] = {
             "col_up": Button(
                 content="+",
@@ -261,7 +261,7 @@ class App:
                     }.items():
                         if event.key == key:
                             if self.game.move(direction):
-                                if self.game.is_game_over():
+                                if self.game.game_over:
                                     self.game_over_sound.play()
                                 else:
                                     self.slide_sound.play()
