@@ -1,10 +1,8 @@
-# @better not modify
 WINDOW_SIZE = {
     "width": 960,
     "height": 640,
 }
 
-# @better not modify
 TILE_SIZE = 100
 
 TILE_COLOR = {

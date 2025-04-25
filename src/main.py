@@ -3,14 +3,13 @@ import pygame
 from typing import Literal
 
 import config
-from font import font
 from button import Button
 from display import Display
-from base_path import base_path
 from classic2048 import Classic2048
+from base_path import is_dev_env, base_path
 from tile_drawer import draw_tile_using_config
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 AUTHOR = "Withered_Flower"
 
 
@@ -22,29 +21,35 @@ class App:
             (config.WINDOW_SIZE["width"], config.WINDOW_SIZE["height"])
         )
         pygame.display.set_caption("Classic 2048")
-        pygame.display.set_icon(pygame.image.load(base_path / "icon" / "2048.ico"))
+        pygame.display.set_icon(
+            pygame.image.load(base_path / "assets" / "icon" / "2048.ico")
+        )
 
         # disable text input
         pygame.key.set_text_input_rect(None)
         pygame.key.stop_text_input()
 
         # load sounds
-        self.slide_sound = pygame.mixer.Sound(base_path / "sounds" / "slide.wav")
-        self.game_over_sound = pygame.mixer.Sound(
-            base_path / "sounds" / "game_over.wav"
-        )
+        sounds_path = base_path / "assets" / "sounds"
+        self.bgm = pygame.mixer.Sound(sounds_path / "bgm.ogg")
+        self.slide_sound = pygame.mixer.Sound(sounds_path / "slide.wav")
+        self.game_over_sound = pygame.mixer.Sound(sounds_path / "game_over.wav")
+        self.bgm.set_volume(0.5)
         self.slide_sound.set_volume(0.5)
         self.game_over_sound.set_volume(0.5)
-        self.hover_sound = pygame.mixer.Sound(base_path / "sounds" / "hover.ogg")
-        self.click_sound = pygame.mixer.Sound(base_path / "sounds" / "click.ogg")
+        self.hover_sound = pygame.mixer.Sound(sounds_path / "hover.ogg")
+        self.click_sound = pygame.mixer.Sound(sounds_path / "click.ogg")
+
+        self.bgm.play(-1)
 
         # game variables
         self.row: int = 4
         self.col: int = 4
         self.is_gaming: bool = False
+        self.is_bgm_on: bool = True
 
         # create displays
-        self.disps: dict[str, Display] = {
+        self.mainmenu_disps: dict[str, Display] = {
             "title": Display(
                 content="Classic 2048",
                 pos=(
@@ -122,9 +127,52 @@ class App:
                 outline_thickness=0,
             ),
         }
+        self.ingame_disps: dict[str, Display] = {
+            "score": Display(
+                content="Score: 0",
+                pos=(
+                    config.WINDOW_SIZE["width"] / 2,
+                    config.WINDOW_SIZE["height"] / 85,
+                ),
+                font_size=(20, 32),
+                font_color="green",
+                offset_y=(2, 6),
+                disp_size=(config.WINDOW_SIZE["width"], 25),
+                disp_color=config.BG_COLOR,
+                outline_thickness=0,
+            ),
+            "game_over": Display(
+                content="Game Over!",
+                pos=(
+                    config.WINDOW_SIZE["width"] / 2,
+                    config.WINDOW_SIZE["height"] / 2.325,
+                ),
+                font_size=(64, 90),
+                font_color="red",
+                offset_y=(-6, 6),
+                disp_size=(400, 100),
+                disp_color="black",
+                outline_thickness=0,
+                alpha=196,
+            ),
+            "reset_tip": Display(
+                content="Press R to reset",
+                pos=(
+                    config.WINDOW_SIZE["width"] / 2,
+                    config.WINDOW_SIZE["height"] / 1.675,
+                ),
+                font_size=(30, 40),
+                font_color="red",
+                offset_y=(0, 2),
+                disp_size=(300, 50),
+                disp_color="black",
+                outline_thickness=0,
+                alpha=196,
+            ),
+        }
 
         # create buttons
-        self.btns: dict[str, Button] = {
+        self.mainmenu_btns: dict[str, Button] = {
             "col_up": Button(
                 content="+",
                 pos=(
@@ -200,9 +248,34 @@ class App:
                 on_click=self.start_game,
                 on_click_sound=self.click_sound,
             ),
+            "bgm_toggle": Button(
+                content="M",
+                pos=(
+                    config.WINDOW_SIZE["width"] / 1.015,
+                    config.WINDOW_SIZE["height"] / 1.02,
+                ),
+                font_size=(15, 25),
+                font_color="white",
+                offset_y=(-2, 0),
+                disp_size=(25, 25),
+                disp_color=config.BG_COLOR,
+                on_enter_sound=self.hover_sound,
+                on_click=self.toggle_bgm,
+                on_click_sound=self.click_sound,
+            ),
+        }
+        self.ingame_btns: dict[str, Button] = {
+            "bgm_toggle": self.mainmenu_btns["bgm_toggle"],
         }
 
         self.game: Classic2048 | None = None
+
+    def toggle_bgm(self) -> None:
+        self.is_bgm_on = not self.is_bgm_on
+        self.bgm.set_volume(0.5 if self.is_bgm_on else 0)
+        self.mainmenu_btns["bgm_toggle"].font_color = (
+            "white" if self.is_bgm_on else "black"
+        )
 
     def start_game(self) -> None:
         self.game = Classic2048(self.row, self.col)
@@ -212,28 +285,20 @@ class App:
         self,
         which: Literal["row", "col"],
         increment: Literal[1, -1],
-    ) -> bool:
-        """
-        Return True if the value of row or col is changed, False otherwise.
-        """
-
+    ) -> None:
         # helper functions
         def clip(num: int, min_val: int, max_val: int) -> int:
             return max(min(num, max_val), min_val)
 
         match which:
             case "row":
-                old_val = self.row
                 self.row += increment
                 self.row = clip(self.row, 2, 6)
-                self.disps["row_disp"].content = f"{self.row}"
-                return self.row != old_val
+                self.mainmenu_disps["row_disp"].content = str(self.row)
             case "col":
-                old_val = self.col
                 self.col += increment
                 self.col = clip(self.col, 2, 9)
-                self.disps["col_disp"].content = f"{self.col}"
-                return self.col != old_val
+                self.mainmenu_disps["col_disp"].content = str(self.col)
 
     def handle_events(self) -> None:
         # helper functions
@@ -242,7 +307,24 @@ class App:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-                for btn in self.btns.values():
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        self.start_game()
+                    elif event.key == pygame.K_m:
+                        self.toggle_bgm()
+                        self.click_sound.play()
+                    else:
+                        for params, keys in {
+                            ("col", -1): (pygame.K_LEFT, pygame.K_a),
+                            ("col", 1): (pygame.K_RIGHT, pygame.K_d),
+                            ("row", 1): (pygame.K_UP, pygame.K_w),
+                            ("row", -1): (pygame.K_DOWN, pygame.K_s),
+                        }.items():
+                            if event.key in keys:
+                                self.change_row_col(*params)
+                                self.click_sound.play()
+                                break
+                for btn in self.mainmenu_btns.values():
                     btn.handle_events(event)
 
             self.update_display()
@@ -253,31 +335,41 @@ class App:
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.KEYDOWN:
-                    for direction, key in {
-                        "left": pygame.K_LEFT,
-                        "right": pygame.K_RIGHT,
-                        "up": pygame.K_UP,
-                        "down": pygame.K_DOWN,
-                    }.items():
-                        if event.key == key:
-                            if self.game.move(direction):
-                                if self.game.game_over:
-                                    self.game_over_sound.play()
-                                else:
-                                    self.slide_sound.play()
-                            break
                     if event.key == pygame.K_r:
                         self.is_gaming = False
-                    self.update_display()
+                    elif event.key == pygame.K_m:
+                        self.toggle_bgm()
+                        self.click_sound.play()
+                    elif is_dev_env and event.key == pygame.K_F2:
+                        self.game.game_over = True
+                    else:
+                        for direction, keys in {
+                            "left": (pygame.K_LEFT, pygame.K_a),
+                            "right": (pygame.K_RIGHT, pygame.K_d),
+                            "up": (pygame.K_UP, pygame.K_w),
+                            "down": (pygame.K_DOWN, pygame.K_s),
+                        }.items():
+                            if event.key in keys:
+                                if self.game.move(direction):
+                                    if self.game.game_over:
+                                        self.game_over_sound.play()
+                                    else:
+                                        self.slide_sound.play()
+                                break
+
+                for btn in self.ingame_btns.values():
+                    btn.handle_events(event)
+
+                self.update_display()
 
         handle_game_events() if self.is_gaming else handle_mainmenu_events()
 
     def update_display(self) -> None:
         # helper functions
         def update_mainmenu_display() -> None:
-            for disp in self.disps.values():
+            for disp in self.mainmenu_disps.values():
                 disp.draw(self.screen)
-            for btn in self.btns.values():
+            for btn in self.mainmenu_btns.values():
                 btn.draw(self.screen)
 
         def update_game_display() -> None:
@@ -294,26 +386,18 @@ class App:
                         ),
                     )
 
-            # region -> draw score
-            score_text = f"Score: {self.game.cal_score()}"
-            score_font, _ = font(18, 32)
-            score_surface = score_font.render(score_text, True, "green")
-            score_rect = score_surface.get_rect(topleft=(0, 0))
-            self.screen.blit(score_surface, score_rect)
-            # endregion
+            # draw score
+            self.ingame_disps["score"].content = f"Score: {self.game.cal_score()}"
+            self.ingame_disps["score"].draw(self.screen)
 
             # draw game over
-            if self.game.is_game_over():
-                game_over_text = "Game Over!"
-                game_over_font, _ = font(64, 72)
-                game_over_surface = game_over_font.render(game_over_text, True, "red")
-                game_over_rect = game_over_surface.get_rect(
-                    center=(
-                        config.WINDOW_SIZE["width"] / 2,
-                        config.WINDOW_SIZE["height"] / 2,
-                    )
-                )
-                self.screen.blit(game_over_surface, game_over_rect)
+            if self.game.game_over:
+                self.ingame_disps["game_over"].draw(self.screen)
+                self.ingame_disps["reset_tip"].draw(self.screen)
+
+            # draw buttons
+            for btn in self.ingame_btns.values():
+                btn.draw(self.screen)
 
         self.screen.fill(config.BG_COLOR)
         update_game_display() if self.is_gaming else update_mainmenu_display()

@@ -1,0 +1,15 @@
+v1.0.2
+- Add bgm
+- Adjust UI layout
+- Add reset tip message when game over
+- Adjust the structure of the project directory
+- Add shortcut keys for game control
+ - Now you can use arrow keys, WASD and enter in main menu
+ - Now you can use both arrow keys and WASD in game to move the tiles
+ - Now you can use 'M' to mute/unmute the bgm any time
+
+v1.0.1
+- Fix known bugs and optimize code structure
+
+v1.0.0
+- Initial release

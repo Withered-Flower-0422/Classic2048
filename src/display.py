@@ -20,6 +20,8 @@ class Display:
         # outline settings
         outline_thickness: int = 2,
         outline_color: ColorLike = "black",
+        # alpha settings
+        alpha: int = 255,
     ):
         self.content = content
         self.pos = pos
@@ -30,10 +32,11 @@ class Display:
         self.disp_color = disp_color
         self.outline_thickness = outline_thickness
         self.outline_color = outline_color
+        self.alpha = alpha
 
-        self._update_surface()
+        self.update_surface()
 
-    def _update_surface(self) -> None:
+    def update_surface(self) -> None:
         surface = pygame.Surface(self.disp_size)
         surface.fill(self.disp_color)
 
@@ -65,10 +68,12 @@ class Display:
                 self.outline_thickness,
             )
 
+        surface.set_alpha(self.alpha)
         self.surface = surface
 
-    def draw(self, screen: pygame.Surface) -> None:
-        self._update_surface()
+    def draw(self, screen: pygame.Surface, update_before_draw: bool = True) -> None:
+        if update_before_draw:
+            self.update_surface()
         screen.blit(
             self.surface,
             (
@@ -86,7 +91,9 @@ if __name__ == "__main__":
     screen = pygame.display.set_mode((1920, 1080))
     screen.fill(config.BG_COLOR)
 
-    Display(content=pygame.image.load(base_path / "icon" / "2048.ico")).draw(screen)
+    Display(
+        content=pygame.image.load(base_path / "assets" / "icon" / "2048.ico"), alpha=128
+    ).draw(screen)
 
     pygame.display.flip()
 

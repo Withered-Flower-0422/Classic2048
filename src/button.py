@@ -25,6 +25,8 @@ class Button(Display):
         # outline settings
         outline_thickness: int = 2,
         outline_color: ColorLike = "black",
+        # alpha settings
+        alpha: int = 255,
         # events settings
         on_enter: Callable = lambda: None,
         on_enter_params: Params | None = None,
@@ -46,6 +48,7 @@ class Button(Display):
             disp_color,
             outline_thickness,
             outline_color,
+            alpha,
         )
         self.disp_color_original = disp_color
         self.disp_color_on_hover = disp_color_on_hover
@@ -148,9 +151,9 @@ if __name__ == "__main__":
     screen = pygame.display.set_mode((1920, 1080))
     screen.fill(config.BG_COLOR)
 
-    enter_sound = pygame.mixer.Sound(base_path / "sounds" / "hover.ogg")
-    click_sound = pygame.mixer.Sound(base_path / "sounds" / "click.ogg")
-    exit_sound = pygame.mixer.Sound(base_path / "sounds" / "hover.ogg")
+    enter_sound = pygame.mixer.Sound(base_path / "assets" / "sounds" / "hover.ogg")
+    click_sound = pygame.mixer.Sound(base_path / "assets" / "sounds" / "click.ogg")
+    exit_sound = pygame.mixer.Sound(base_path / "assets" / "sounds" / "hover.ogg")
 
     def b1_on_enter(param):
         print("b1 entered")
