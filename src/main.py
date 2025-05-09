@@ -1,20 +1,20 @@
 import sys
 import pygame
-from typing import Literal
+from typing import Literal, cast
 
 import config
 from button import Button
 from display import Display
-from classic2048 import Classic2048
 from base_path import is_dev_env, base_path
+from classic2048 import Classic2048, Direction
 from tile_drawer import draw_tile_using_config
 
-VERSION = "1.0.2"
+VERSION = "1.0.3"
 AUTHOR = "Withered_Flower"
 
 
 class App:
-    def __init__(self):
+    def __init__(self) -> None:
         # initialize pygame
         pygame.init()
         self.screen = pygame.display.set_mode(
@@ -26,7 +26,6 @@ class App:
         )
 
         # disable text input
-        pygame.key.set_text_input_rect(None)
         pygame.key.stop_text_input()
 
         # load sounds
@@ -156,7 +155,7 @@ class App:
                 alpha=196,
             ),
             "reset_tip": Display(
-                content="Press R to reset",
+                content="Press R or ESC to reset",
                 pos=(
                     config.WINDOW_SIZE["width"] / 2,
                     config.WINDOW_SIZE["height"] / 1.675,
@@ -164,7 +163,7 @@ class App:
                 font_size=(30, 40),
                 font_color="red",
                 offset_y=(0, 2),
-                disp_size=(300, 50),
+                disp_size=(350, 50),
                 disp_color="black",
                 outline_thickness=0,
                 alpha=196,
@@ -308,18 +307,27 @@ class App:
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN:
+                    if event.key in (
+                        pygame.K_RETURN,
+                        pygame.K_SPACE,
+                        pygame.K_KP_5,
+                        pygame.K_KP_ENTER,
+                        pygame.K_KP_0,
+                    ):
                         self.start_game()
-                    elif event.key == pygame.K_m:
+                    elif event.key in (pygame.K_m,):
                         self.toggle_bgm()
                         self.click_sound.play()
                     else:
                         for params, keys in {
-                            ("col", -1): (pygame.K_LEFT, pygame.K_a),
-                            ("col", 1): (pygame.K_RIGHT, pygame.K_d),
-                            ("row", 1): (pygame.K_UP, pygame.K_w),
-                            ("row", -1): (pygame.K_DOWN, pygame.K_s),
+                            ("col", -1): (pygame.K_LEFT, pygame.K_a, pygame.K_KP4),
+                            ("col", 1): (pygame.K_RIGHT, pygame.K_d, pygame.K_KP6),
+                            ("row", 1): (pygame.K_UP, pygame.K_w, pygame.K_KP8),
+                            ("row", -1): (pygame.K_DOWN, pygame.K_s, pygame.K_KP2),
                         }.items():
+                            params = cast(
+                                tuple[Literal["row", "col"], Literal[1, -1]], params
+                            )
                             if event.key in keys:
                                 self.change_row_col(*params)
                                 self.click_sound.play()
@@ -330,25 +338,31 @@ class App:
             self.update_display()
 
         def handle_game_events() -> None:
+            self.game = cast(Classic2048, self.game)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_r:
+                    if event.key in (
+                        pygame.K_r,
+                        pygame.K_ESCAPE,
+                        pygame.K_KP_PERIOD,
+                    ):
                         self.is_gaming = False
-                    elif event.key == pygame.K_m:
+                    elif event.key in (pygame.K_m,):
                         self.toggle_bgm()
                         self.click_sound.play()
-                    elif is_dev_env and event.key == pygame.K_F2:
+                    elif is_dev_env and event.key in (pygame.K_F2,):
                         self.game.game_over = True
                     else:
                         for direction, keys in {
-                            "left": (pygame.K_LEFT, pygame.K_a),
-                            "right": (pygame.K_RIGHT, pygame.K_d),
-                            "up": (pygame.K_UP, pygame.K_w),
-                            "down": (pygame.K_DOWN, pygame.K_s),
+                            "left": (pygame.K_LEFT, pygame.K_a, pygame.K_KP4),
+                            "right": (pygame.K_RIGHT, pygame.K_d, pygame.K_KP6),
+                            "up": (pygame.K_UP, pygame.K_w, pygame.K_KP8),
+                            "down": (pygame.K_DOWN, pygame.K_s, pygame.K_KP2),
                         }.items():
+                            direction = cast(Direction, direction)
                             if event.key in keys:
                                 if self.game.move(direction):
                                     if self.game.game_over:
@@ -373,6 +387,7 @@ class App:
                 btn.draw(self.screen)
 
         def update_game_display() -> None:
+            self.game = cast(Classic2048, self.game)
             # draw board
             for i in range(self.game.row):
                 for j in range(self.game.col):
@@ -404,7 +419,6 @@ class App:
         pygame.display.update()
 
     def run(self):
-        self.update_display()
         while True:
             self.handle_events()
 

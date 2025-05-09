@@ -9,7 +9,7 @@ class Display:
         self,
         # basic settings
         content: str | pygame.Surface = "Display",
-        pos: tuple[int, int] = (150, 50),
+        pos: tuple[float, float] = (150, 50),
         # font settings
         font_size: tuple[int, int] = (60, 100),  # [normal, backup]
         font_color: ColorLike = "black",
@@ -40,7 +40,7 @@ class Display:
         surface = pygame.Surface(self.disp_size)
         surface.fill(self.disp_color)
 
-        if type(self.content) is str:
+        if isinstance(self.content, str):
             f, success = font(*self.font_size)
             o = self.offset_y[0] if success else self.offset_y[1]
             text = f.render(self.content, True, self.font_color)

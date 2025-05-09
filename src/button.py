@@ -4,7 +4,7 @@ from pygame.typing import ColorLike
 
 from display import Display
 
-type Params = tuple[tuple[Any], dict[str, Any]]
+type Params = tuple[tuple[Any, ...], dict[str, Any]]
 
 
 class Button(Display):
@@ -12,7 +12,7 @@ class Button(Display):
         self,
         # basic settings
         content: str | pygame.Surface = "Button",
-        pos: tuple[int, int] = (150, 50),
+        pos: tuple[float, float] = (150, 50),
         # font settings
         font_size: tuple[int, int] = (60, 100),  # [normal, backup]
         font_color: ColorLike = "black",

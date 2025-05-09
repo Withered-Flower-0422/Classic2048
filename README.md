@@ -4,8 +4,8 @@ Classic 2048 game written in Python.
 
 ## Current Version
 
-- Version: 1.0.2
-- Release Date: 2025-04-25
+- Version: 1.0.3
+- Release Date: 2025-05-09
 
 ## About
 

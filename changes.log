@@ -1,3 +1,16 @@
+v1.0.3
+- Optimize code structure
+- Add 2 shortcuts
+ - 'Space' to start the game (in main menu)
+ - 'Escape' to return to main menu (in game)
+- Support for numeric keypad
+ - in main menu
+  - '2', '4', '6', '8' to change the row / col settings
+  - '5', '0' or 'Enter' to start the game
+ - in game
+  - '2', '4', '6', '8' to move the tiles down / left / up / right
+  - '.' to return to main menu
+
 v1.0.2
 - Add bgm
 - Adjust UI layout
